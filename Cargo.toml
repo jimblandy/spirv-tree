@@ -1,0 +1,10 @@
+[package]
+name = "spirv-tree"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+anyhow = "1"
+rspirv = { path = "../rspirv/rspirv" }
+spirv_headers = { path = "../rspirv/spirv" }
+structopt = "0.3"

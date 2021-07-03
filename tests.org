@@ -1,0 +1,8 @@
+- `if`
+  - with and without `else`
+  - conditions:
+    - containing ?:
+    - (||)&&(||)
+    - (&&)||(&&)
+    - !(&&)
+    - !(||)
