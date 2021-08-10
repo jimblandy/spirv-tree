@@ -1,0 +1,39 @@
+;; if-else-if-else chain.
+;; expected failure:
+;;     Selection must be structured
+;;     OpBranchConditional %9 %14 %15
+
+                    OpCapability Shader
+                    OpCapability Linkage
+                    OpMemoryModel Logical GLSL450
+
+             %int = OpTypeInt 32 1
+            %bool = OpTypeBool
+   %if_chain_type = OpTypeFunction %int %int %int %int %bool %bool
+
+        %if_chain = OpFunction %int None %if_chain_type
+            %left = OpFunctionParameter %int
+             %mid = OpFunctionParameter %int
+           %right = OpFunctionParameter %int
+          %which1 = OpFunctionParameter %bool
+          %which2 = OpFunctionParameter %bool
+        %ob_label = OpLabel
+                    OpSelectionMerge %merge None
+                    OpBranchConditional %which1 %take_left %next
+
+       %take_left = OpLabel
+                    OpBranch %merge
+
+            %next = OpLabel
+                    OpBranchConditional %which2 %take_mid %take_right
+
+        %take_mid = OpLabel
+                    OpBranch %merge
+
+      %take_right = OpLabel
+                    OpBranch %merge
+
+           %merge = OpLabel
+       %selection = OpPhi %int %left %take_left %mid %take_mid %right %take_right
+                    OpReturnValue %selection
+                    OpFunctionEnd

@@ -1,0 +1,40 @@
+;; Simple 'if'.
+;;
+;; fn either(left: i32, right: i32, which: bool) -> i32 {
+;;     if which {
+;;         left + 1
+;;     } else {
+;;         right + 1
+;;     }
+;; }
+
+                OpCapability Shader
+                OpCapability Linkage
+                OpMemoryModel Logical GLSL450
+
+         %int = OpTypeInt 32 1
+        %bool = OpTypeBool
+ %either_type = OpTypeFunction %int %int %int %bool
+     %const_1 = OpConstant %int 1
+
+      %either = OpFunction %int None %either_type
+        %left = OpFunctionParameter %int
+       %right = OpFunctionParameter %int
+       %which = OpFunctionParameter %bool
+
+    %ob_label = OpLabel
+                OpSelectionMerge %merge None
+                OpBranchConditional %which %take_left %take_right
+
+   %take_left = OpLabel
+   %left_plus = OpIAdd %int %left %const_1
+                OpBranch %merge
+
+  %take_right = OpLabel
+  %right_plus = OpIAdd %int %right %const_1
+                OpBranch %merge
+
+       %merge = OpLabel
+   %selection = OpPhi %int %left_plus %take_left %right_plus %take_right
+                OpReturnValue %selection
+                OpFunctionEnd

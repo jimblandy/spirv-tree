@@ -1,0 +1,77 @@
+;; Expected failure.
+;; Compared to weird-condition.spvasm, this adds a third clause to the if chain,
+;; which doesn't work.
+
+; SPIR-V
+; Version: 1.0
+; Generator: Khronos Glslang Reference Front End; 10
+; Bound: 35
+; Schema: 0
+               OpCapability Shader
+          %1 = OpExtInstImport "GLSL.std.450"
+               OpMemoryModel Logical GLSL450
+               OpEntryPoint Fragment %main "main" %x %fragColor
+               OpExecutionMode %main OriginUpperLeft
+               OpSource GLSL 460
+               OpName %main "main"
+               OpName %x "x"
+               OpName %fragColor "fragColor"
+               OpDecorate %x Flat
+               OpDecorate %x Location 0
+               OpDecorate %fragColor Location 0
+       %void = OpTypeVoid
+          %3 = OpTypeFunction %void
+        %int = OpTypeInt 32 1
+%_ptr_Input_int = OpTypePointer Input %int
+          %x = OpVariable %_ptr_Input_int Input
+      %int_4 = OpConstant %int 4
+       %bool = OpTypeBool
+      %float = OpTypeFloat 32
+    %v4float = OpTypeVector %float 4
+%_ptr_Output_v4float = OpTypePointer Output %v4float
+  %fragColor = OpVariable %_ptr_Output_v4float Output
+    %float_1 = OpConstant %float 1
+       %uint = OpTypeInt 32 0
+     %uint_0 = OpConstant %uint 0
+%_ptr_Output_float = OpTypePointer Output %float
+      %int_5 = OpConstant %int 5
+      %int_6 = OpConstant %int 6
+    %float_2 = OpConstant %float 2
+    %float_3 = OpConstant %float 3
+%float_0_400000006 = OpConstant %float 0.400000006
+%float_0_800000012 = OpConstant %float 0.800000012
+         %34 = OpConstantComposite %v4float %float_0_400000006 %float_0_400000006 %float_0_800000012 %float_1
+       %main = OpFunction %void None %3
+          %5 = OpLabel
+          %9 = OpLoad %int %x
+         %12 = OpIEqual %bool %9 %int_4
+               OpSelectionMerge %14 None
+               OpBranchConditional %12 %13 %24
+
+         %13 = OpLabel
+         %23 = OpAccessChain %_ptr_Output_float %fragColor %uint_0
+               OpStore %23 %float_1
+               OpBranch %14
+
+         %24 = OpLabel
+         %27 = OpIEqual %bool %9 %int_5
+               OpBranchConditional %27 %28 %third_test
+
+         %28 = OpLabel
+         %31 = OpAccessChain %_ptr_Output_float %fragColor %uint_0
+               OpStore %31 %float_2
+               OpBranch %14
+
+ %third_test = OpLabel
+       %cond = OpIEqual %bool %9 %int_6
+               OpBranchConditional %cond %third_then %14
+
+ %third_then = OpLabel
+       %addr = OpAccessChain %_ptr_Output_float %fragColor %uint_0
+               OpStore %addr %float_3
+               OpBranch %14
+
+         %14 = OpLabel
+               OpStore %fragColor %34
+               OpReturn
+               OpFunctionEnd

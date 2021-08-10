@@ -1,0 +1,52 @@
+;; Three-way branch.
+;; Fails to validate: "Selection must be structured"
+;;
+;; fn either(left: i32, mid: i32, right: i32, which1: bool, which2: bol) -> i32 {
+;;     if which1 {
+;;         left + 1
+;;     } else if which2 {
+;;         mid + 1
+;;     } else {
+;;         right + 1
+;;     }
+;; }
+
+                OpCapability Shader
+                OpCapability Linkage
+                OpMemoryModel Logical GLSL450
+
+         %int = OpTypeInt 32 1
+        %bool = OpTypeBool
+ %either_type = OpTypeFunction %int %int %int %int %bool %bool
+     %const_1 = OpConstant %int 1
+
+      %either = OpFunction %int None %either_type
+        %left = OpFunctionParameter %int
+         %mid = OpFunctionParameter %int
+       %right = OpFunctionParameter %int
+      %which1 = OpFunctionParameter %bool
+      %which2 = OpFunctionParameter %bool
+
+    %ob_label = OpLabel
+                OpSelectionMerge %merge None
+                OpBranchConditional %which1 %take_left %next_test
+
+   %take_left = OpLabel
+   %left_plus = OpIAdd %int %left %const_1
+                OpBranch %merge
+
+   %next_test = OpLabel
+                OpBranchConditional %which2 %take_mid %take_right
+
+    %take_mid = OpLabel
+    %mid_plus = OpIAdd %int %mid %const_1
+                OpBranch %merge
+
+  %take_right = OpLabel
+  %right_plus = OpIAdd %int %right %const_1
+                OpBranch %merge
+
+       %merge = OpLabel
+   %selection = OpPhi %int %left_plus %take_left %mid_plus %take_mid %right_plus %take_right
+                OpReturnValue %selection
+                OpFunctionEnd

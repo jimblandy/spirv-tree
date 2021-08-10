@@ -1,0 +1,64 @@
+;; A single block serves as both one loop's merge and another loop's continue.
+;;
+;; fn polyhedron(n: i32) -> i32 {
+;;     let mut sum = 0;
+;;     let mut i = n;
+;;     loop {
+;;         let mut j = i;
+;;         loop {
+;;             sum += j;
+;;
+;;             if --j <= 0 {
+;;                 break;
+;;             }
+;;         }
+;;
+;;         if --i <= 0 {
+;;             break;
+;;         }
+;;     }
+;;     return sum;
+;; }
+
+                    OpCapability Shader
+                    OpCapability Linkage
+                    OpMemoryModel Logical GLSL450
+
+             %int = OpTypeInt 32 1
+            %bool = OpTypeBool
+ %polyhedron_type = OpTypeFunction %int %int
+         %const_0 = OpConstant %int 0
+         %const_1 = OpConstant %int 1
+
+      %polyhedron = OpFunction %int None %polyhedron_type
+               %n = OpFunctionParameter %int
+
+         %prelude = OpLabel
+                    OpBranch %9
+
+               %9 = OpLabel
+               %i = OpPhi %int %n %prelude %next_i %12
+            %sum1 = OpPhi %int %const_0 %prelude %next_sum2 %12
+                    OpLoopMerge %15 %12 None
+                    OpBranch %16
+
+              %16 = OpLabel
+               %j = OpPhi %int %i %9 %next_j %17
+            %sum2 = OpPhi %int %sum1 %9 %next_sum2 %17
+       %next_sum2 = OpIAdd %int %sum2 %j
+          %next_j = OpISub %int %j %const_1
+           %cond2 = OpSLessThanEqual %bool %next_j %const_0
+                    OpLoopMerge %12 %17 None
+                    OpBranchConditional %cond2 %12 %17
+
+              %17 = OpLabel
+                    OpBranch %16
+
+              %12 = OpLabel
+          %next_i = OpISub %int %i %const_1
+           %cond1 = OpSLessThanEqual %bool %next_i %const_0
+                    OpBranchConditional %cond1 %15 %9
+
+              %15 = OpLabel
+                    OpReturnValue %next_sum2
+                    OpFunctionEnd

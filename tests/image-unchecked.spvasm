@@ -1,0 +1,25 @@
+;; Image texel fetches without bounds checks.
+
+                    OpCapability Shader
+                    OpCapability Linkage
+                    OpMemoryModel Logical GLSL450
+
+             %int = OpTypeInt 32 1
+             %f32 = OpTypeFloat 32
+          %v2_int = OpTypeVector %int 2
+            %bool = OpTypeBool
+
+        %image_2d = OpTypeImage %f32 2D 0 0 0 0 Rgba32f
+    %ptr_image_2d = OpTypePointer UniformConstant %image_2d
+      %var_source = OpVariable %ptr_image_2d UniformConstant
+
+      %fetch_type = OpTypeFunction %f32 %v2_int
+
+           %fetch = OpFunction %f32 None %fetch_type
+          %coords = OpFunctionParameter %v2_int
+
+        %ob_label = OpLabel
+          %source = OpLoad %image_2d %var_source
+           %texel = OpImageRead %f32 %source %coords
+                    OpReturnValue %texel
+                    OpFunctionEnd

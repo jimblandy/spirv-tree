@@ -1,0 +1,279 @@
+Module {
+    types: {
+        [1]: Type {
+            name: None,
+            inner: Vector {
+                size: Quad,
+                kind: Float,
+                width: 4,
+            },
+        },
+        [2]: Type {
+            name: None,
+            inner: Scalar {
+                kind: Bool,
+                width: 1,
+            },
+        },
+        [3]: Type {
+            name: None,
+            inner: Scalar {
+                kind: Uint,
+                width: 4,
+            },
+        },
+        [4]: Type {
+            name: Some(
+                "MyInputs",
+            ),
+            inner: Struct {
+                top_level: false,
+                members: [
+                    StructMember {
+                        name: Some(
+                            "x",
+                        ),
+                        ty: [1],
+                        binding: Some(
+                            Location {
+                                location: 0,
+                                interpolation: Some(
+                                    Perspective,
+                                ),
+                                sampling: Some(
+                                    Center,
+                                ),
+                            },
+                        ),
+                        offset: 0,
+                    },
+                    StructMember {
+                        name: Some(
+                            "y",
+                        ),
+                        ty: [2],
+                        binding: Some(
+                            BuiltIn(
+                                FrontFacing,
+                            ),
+                        ),
+                        offset: 16,
+                    },
+                    StructMember {
+                        name: Some(
+                            "z",
+                        ),
+                        ty: [3],
+                        binding: Some(
+                            Location {
+                                location: 1,
+                                interpolation: Some(
+                                    Flat,
+                                ),
+                                sampling: None,
+                            },
+                        ),
+                        offset: 20,
+                    },
+                ],
+                span: 32,
+            },
+        },
+        [5]: Type {
+            name: None,
+            inner: Scalar {
+                kind: Float,
+                width: 4,
+            },
+        },
+        [6]: Type {
+            name: Some(
+                "MyOutputs",
+            ),
+            inner: Struct {
+                top_level: false,
+                members: [
+                    StructMember {
+                        name: Some(
+                            "x",
+                        ),
+                        ty: [5],
+                        binding: Some(
+                            BuiltIn(
+                                FragDepth,
+                            ),
+                        ),
+                        offset: 0,
+                    },
+                    StructMember {
+                        name: Some(
+                            "y",
+                        ),
+                        ty: [1],
+                        binding: Some(
+                            Location {
+                                location: 0,
+                                interpolation: None,
+                                sampling: None,
+                            },
+                        ),
+                        offset: 16,
+                    },
+                ],
+                span: 32,
+            },
+        },
+    },
+    constants: {
+        [1]: Constant {
+            name: None,
+            specialization: None,
+            inner: Scalar {
+                width: 4,
+                value: Float(
+                    1.0,
+                ),
+            },
+        },
+    },
+    global_variables: {},
+    functions: {},
+    entry_points: [
+        EntryPoint {
+            name: "fragShader",
+            stage: Fragment,
+            early_depth_test: None,
+            workgroup_size: [
+                0,
+                0,
+                0,
+            ],
+            function: Function {
+                name: Some(
+                    "fragShader",
+                ),
+                arguments: [
+                    FunctionArgument {
+                        name: Some(
+                            "in1",
+                        ),
+                        ty: [4],
+                        binding: None,
+                    },
+                ],
+                result: Some(
+                    FunctionResult {
+                        ty: [6],
+                        binding: None,
+                    },
+                ),
+                local_variables: {},
+                expressions: {
+                    [1]: FunctionArgument(
+                        0,
+                    ),
+                    [2]: Constant(
+                        [1],
+                    ),
+                    [3]: AccessIndex {
+                        base: [1],
+                        index: 0,
+                    },
+                    [4]: Compose {
+                        ty: [6],
+                        components: [
+                            [2],
+                            [3],
+                        ],
+                    },
+                },
+                named_expressions: {},
+                body: [
+                    Emit(
+                        [3..4],
+                    ),
+                    Return {
+                        value: Some(
+                            [4],
+                        ),
+                    },
+                ],
+            },
+        },
+    ],
+}
+
+ModuleInfo {
+    functions: [],
+    entry_points: [
+        FunctionInfo {
+            flags: EXPRESSIONS | BLOCKS | CONTROL_FLOW_UNIFORMITY | STRUCT_LAYOUTS | CONSTANTS,
+            available_stages: VERTEX | FRAGMENT | COMPUTE,
+            uniformity: Uniformity {
+                non_uniform_result: Some(
+                    [1],
+                ),
+                requirements: (empty),
+            },
+            may_kill: false,
+            sampling_set: {},
+            global_uses: [],
+            expressions: [
+                ExpressionInfo {
+                    uniformity: Uniformity {
+                        non_uniform_result: Some(
+                            [1],
+                        ),
+                        requirements: (empty),
+                    },
+                    ref_count: 1,
+                    assignable_global: None,
+                    ty: Handle(
+                        [4],
+                    ),
+                },
+                ExpressionInfo {
+                    uniformity: Uniformity {
+                        non_uniform_result: None,
+                        requirements: (empty),
+                    },
+                    ref_count: 1,
+                    assignable_global: None,
+                    ty: Value(
+                        Scalar {
+                            kind: Float,
+                            width: 4,
+                        },
+                    ),
+                },
+                ExpressionInfo {
+                    uniformity: Uniformity {
+                        non_uniform_result: Some(
+                            [1],
+                        ),
+                        requirements: (empty),
+                    },
+                    ref_count: 1,
+                    assignable_global: None,
+                    ty: Handle(
+                        [1],
+                    ),
+                },
+                ExpressionInfo {
+                    uniformity: Uniformity {
+                        non_uniform_result: Some(
+                            [1],
+                        ),
+                        requirements: (empty),
+                    },
+                    ref_count: 1,
+                    assignable_global: None,
+                    ty: Handle(
+                        [6],
+                    ),
+                },
+            ],
+            sampling: {},
+        },
+    ],
+}

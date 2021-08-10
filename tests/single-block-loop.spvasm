@@ -1,0 +1,45 @@
+;; Loop that is a single block.
+;;
+;; What's interesting here is that the OpLoopMerge names its own block as the
+;; continue block.
+;;
+;; fn triangle(n: i32) -> i32 {
+;;     let mut sum = 0;
+;;     loop {
+;;         sum += n;
+;;         n -= 1;
+;;         if n <= 0 {
+;;             break;
+;;         }
+;;     }
+;;     return sum;
+;; }
+
+                    OpCapability Shader
+                    OpCapability Linkage
+                    OpMemoryModel Logical GLSL450
+
+             %int = OpTypeInt 32 1
+            %bool = OpTypeBool
+   %triangle_type = OpTypeFunction %int %int
+         %const_0 = OpConstant %int 0
+         %const_1 = OpConstant %int 1
+
+        %triangle = OpFunction %int None %triangle_type
+         %n_param = OpFunctionParameter %int
+
+        %ob_label = OpLabel
+                    OpBranch %loop_head
+
+       %loop_head = OpLabel
+               %n = OpPhi %int %n_param %ob_label %next_n %loop_head
+             %sum = OpPhi %int %const_0 %ob_label %next_sum %loop_head
+          %next_n = OpISub %int %n %const_1
+        %next_sum = OpIAdd %int %sum %n
+            %cond = OpSLessThanEqual %bool %next_n %const_0
+                    OpLoopMerge %merge %loop_head None
+                    OpBranchConditional %cond %merge %loop_head
+
+           %merge = OpLabel
+                    OpReturnValue %next_sum
+                    OpFunctionEnd

@@ -1,0 +1,46 @@
+;; Jump out of an inner `if` to an outer.
+;; Fails to validate:
+;; block <ID> 13[%13] exits the selection headed by <ID> 11[%11], but not via a structured exit
+;;
+;; fn jump_out(which1: bool, which2: bool) -> i32 {
+;;     if which1 {
+;;         if which2 {
+;;             goto a;
+;;         }
+;;         return 1;
+;;     }
+;;     a:
+;;     return 2;
+;; }
+
+                    OpCapability Shader
+                    OpCapability Linkage
+                    OpMemoryModel Logical GLSL450
+
+             %int = OpTypeInt 32 1
+            %bool = OpTypeBool
+   %jump_out_type = OpTypeFunction %int %bool %bool
+         %const_1 = OpConstant %int 1
+         %const_2 = OpConstant %int 2
+
+        %jump_out = OpFunction %int None %jump_out_type
+          %which1 = OpFunctionParameter %bool
+          %which2 = OpFunctionParameter %bool
+
+        %ob_label = OpLabel
+                    OpSelectionMerge %merge1 None
+                    OpBranchConditional %which1 %then1 %merge1
+
+           %then1 = OpLabel
+                    OpSelectionMerge %merge2 None
+                    OpBranchConditional %which2 %then2 %merge2
+
+           %then2 = OpLabel
+                    OpBranch %merge1
+
+          %merge2 = OpLabel
+                    OpReturnValue %const_1
+
+          %merge1 = OpLabel
+                    OpReturnValue %const_2
+                    OpFunctionEnd

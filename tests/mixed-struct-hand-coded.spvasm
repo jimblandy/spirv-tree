@@ -1,0 +1,37 @@
+;; Struct containing mix of Builtin and Location decorations.
+;;
+;; Validation fails:
+;;
+;; error: line 11: When BuiltIn decoration is applied to a structure-type
+;; member, all members of that structure type must also be decorated with
+;; BuiltIn (No allowed mixing of built-in variables and non-built-in variables
+;; within a single structure). Structure id 3 [ed: %mixed] does not meet this
+;; requirement.
+
+                    OpCapability Shader
+                    OpMemoryModel Logical GLSL450
+
+                    OpEntryPoint Vertex %vertex "vertex" %out
+
+                    OpMemberDecorate %mixed 0 Location 0
+                    OpMemberDecorate %mixed 1 BuiltIn Position
+
+            %void = OpTypeVoid
+             %int = OpTypeInt 32 1
+             %f32 = OpTypeFloat 32
+          %v4_f32 = OpTypeVector %f32 4
+            %bool = OpTypeBool
+
+           %mixed = OpTypeStruct %f32 %v4_f32
+      %mixed_null = OpConstantNull %mixed
+       %ptr_mixed = OpTypePointer Output %mixed
+             %out = OpVariable %ptr_mixed Output
+
+     %vertex_type = OpTypeFunction %void
+
+          %vertex = OpFunction %void None %vertex_type
+
+        %ob_label = OpLabel
+                    OpStore %out %mixed_null
+                    OpReturn
+                    OpFunctionEnd
