@@ -1,12 +1,31 @@
 ;; Image texel fetches with `IndexBoundsCheckPolicy::ReadZeroSkipWrite`.
+;; Validates in Vulkan 1.2 environment
 
                         OpCapability Shader
                         OpCapability ImageQuery
              %glsl450 = OpExtInstImport "GLSL.std.450"
                         OpMemoryModel Logical GLSL450
 
-                        OpEntryPoint Fragment %fragment "fragment" %input_coords %input_index %input_lod %output
+                        OpEntryPoint Fragment %fragment "fragment" %input_coords %input_index %input_lod
+                                              %var_source %var_arr_source %var_ssource %var_arr_ssource
+                                              %output
                         OpExecutionMode %fragment OriginUpperLeft
+
+                        ;; Required decorations for uniform images
+                        OpDecorate %var_source DescriptorSet 0
+                        OpDecorate %var_source Binding 0
+                        OpDecorate %var_arr_source DescriptorSet 0
+                        OpDecorate %var_arr_source Binding 0
+                        OpDecorate %var_ssource DescriptorSet 0
+                        OpDecorate %var_ssource Binding 0
+                        OpDecorate %var_arr_ssource DescriptorSet 0
+                        OpDecorate %var_arr_ssource Binding 0
+
+                        ;; Required decorations for interface variables
+                        OpDecorate %input_coords Location 0
+                        OpDecorate %input_index Location 1
+                        OpDecorate %input_lod Location 2
+                        OpDecorate %output Location 0
 
                 %void = OpTypeVoid
                 %bool = OpTypeBool
@@ -36,12 +55,12 @@
               %output = OpVariable %ptr_out_v4_f32 Output %v4_f32_zero
 
                         ;; A storage image.
-            %image_2d = OpTypeImage %f32 2D 0 0 0 0 Rgba32f
+            %image_2d = OpTypeImage %f32 2D 0 0 0 2 Rgba32f
         %ptr_image_2d = OpTypePointer UniformConstant %image_2d
           %var_source = OpVariable %ptr_image_2d UniformConstant
 
                         ;; An arrayed storage image.
-        %image_arr_2d = OpTypeImage %f32 2D 0 1 0 0 Rgba32f
+        %image_arr_2d = OpTypeImage %f32 2D 0 1 0 2 Rgba32f
     %ptr_image_arr_2d = OpTypePointer UniformConstant %image_arr_2d
       %var_arr_source = OpVariable %ptr_image_arr_2d UniformConstant
 
@@ -77,11 +96,11 @@
                         OpBranchConditional %coords_cond1 %read1 %merge1
 
                %read1 = OpLabel
-         %real_texel1 = OpImageRead %f32 %source %coords
+         %real_texel1 = OpImageRead %v4_f32 %source %coords
                         OpBranch %merge1
 
               %merge1 = OpLabel
-              %texel1 = OpPhi %f32 %real_texel1 %read1 %f32_zero %ob_label
+              %texel1 = OpPhi %v4_f32 %real_texel1 %read1 %v4_f32_zero %ob_label
 
 ;; Level of detail, no array index
              %levels2 = OpImageQueryLevels %int %ssource
@@ -102,7 +121,8 @@
               %merge2 = OpLabel
               %texel2 = OpPhi %v4_f32 %real_texel2 %read2 %v4_f32_zero %check_coords2 %v4_f32_zero %merge1
 
-                        OpReturnValue %texel2
+             %result2 = OpFAdd %v4_f32 %texel1 %texel2
+                        OpReturnValue %result2
                         OpFunctionEnd
 
                         ;; Entry point.
