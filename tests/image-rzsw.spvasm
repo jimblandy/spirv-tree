@@ -33,6 +33,7 @@
                  %f32 = OpTypeFloat 32
 
              %v2_bool = OpTypeVector %bool 2
+             %v3_bool = OpTypeVector %bool 3
               %v2_int = OpTypeVector %int 2
               %v3_int = OpTypeVector %int 3
               %v4_f32 = OpTypeVector %f32 4
@@ -87,6 +88,7 @@
               %source = OpLoad %image_2d %var_source
           %arr_source = OpLoad %image_arr_2d %var_arr_source
              %ssource = OpLoad %simage_2d %var_ssource
+         %arr_ssource = OpLoad %simage_arr_2d %var_arr_ssource
 
 ;; No level of detail or array index.
              %bounds1 = OpImageQuerySize %v2_int %source
@@ -121,8 +123,45 @@
               %merge2 = OpLabel
               %texel2 = OpPhi %v4_f32 %real_texel2 %read2 %v4_f32_zero %check_coords2 %v4_f32_zero %merge1
 
+;; Array, no level of detail
+          %coords_ix3 = OpCompositeConstruct %v3_int %coords %index
+             %bounds3 = OpImageQuerySize %v3_int %arr_source
+       %coords_conds3 = OpULessThan %v3_bool %coords_ix3 %bounds3
+        %coords_cond3 = OpAll %bool %coords_conds3
+                        OpSelectionMerge %merge3 None
+                        OpBranchConditional %coords_cond3 %read3 %merge3
+
+               %read3 = OpLabel
+         %real_texel3 = OpImageRead %v4_f32 %arr_source %coords_ix3
+                        OpBranch %merge3
+
+              %merge3 = OpLabel
+              %texel3 = OpPhi %v4_f32 %real_texel3 %read3 %v4_f32_zero %merge2
+
+;; Array index and level of detail
+             %levels4 = OpImageQueryLevels %int %arr_ssource
+           %lod_cond4 = OpULessThan %bool %lod %levels4
+                        OpSelectionMerge %merge4 None
+                        OpBranchConditional %lod_cond4 %check_coords4 %merge4
+
+       %check_coords4 = OpLabel
+          %coords_ix4 = OpCompositeConstruct %v3_int %coords %index
+             %bounds4 = OpImageQuerySizeLod %v3_int %arr_ssource %lod
+       %coords_conds4 = OpULessThan %v3_bool %coords_ix4 %bounds4
+        %coords_cond4 = OpAll %bool %coords_conds4
+                        OpBranchConditional %coords_cond4 %read4 %merge4
+
+               %read4 = OpLabel
+         %real_texel4 = OpImageFetch %v4_f32 %arr_ssource %coords_ix4 Lod %lod
+                        OpBranch %merge4
+
+              %merge4 = OpLabel
+              %texel4 = OpPhi %v4_f32 %real_texel4 %read4 %v4_f32_zero %check_coords4 %v4_f32_zero %merge3
+
              %result2 = OpFAdd %v4_f32 %texel1 %texel2
-                        OpReturnValue %result2
+             %result3 = OpFAdd %v4_f32 %result2 %texel3
+             %result4 = OpFAdd %v4_f32 %result3 %texel4
+                        OpReturnValue %result4
                         OpFunctionEnd
 
                         ;; Entry point.
