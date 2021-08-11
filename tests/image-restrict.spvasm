@@ -107,9 +107,7 @@
              %bounds3 = OpImageQuerySize %v3_int %arr_source
               %limit3 = OpISub %v3_int %bounds3 %v3_one
 
-           %coords_x3 = OpCompositeExtract %int %coords 0
-           %coords_y3 = OpCompositeExtract %int %coords 1
-           %combined3 = OpCompositeConstruct %v3_int %coords_x3 %coords_y3 %index
+           %combined3 = OpCompositeConstruct %v3_int %coords %index
      %clamped_coords3 = OpExtInst %v3_int %glsl450 UMin %combined3 %limit3
               %texel3 = OpImageRead %v4_f32 %source %clamped_coords3
 
@@ -118,9 +116,7 @@
         %level_limit4 = OpISub %int %levels4 %one
         %clamped_lod4 = OpExtInst %int %glsl450 UMin %lod %level_limit4
 
-           %coords_x4 = OpCompositeExtract %int %coords 0
-           %coords_y4 = OpCompositeExtract %int %coords 1
-           %combined4 = OpCompositeConstruct %v3_int %coords_x4 %coords_y4 %index
+           %combined4 = OpCompositeConstruct %v3_int %coords %index
 
              %bounds4 = OpImageQuerySizeLod %v3_int %arr_ssource %clamped_lod4
               %limit4 = OpISub %v3_int %bounds4 %v3_one
