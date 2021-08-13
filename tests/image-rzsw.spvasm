@@ -6,8 +6,10 @@
              %glsl450 = OpExtInstImport "GLSL.std.450"
                         OpMemoryModel Logical GLSL450
 
-                        OpEntryPoint Fragment %fragment "fragment" %input_coords %input_index %input_lod
+                        OpEntryPoint Fragment %fragment "fragment"
+                                              %input_coords %input_index %input_lod %input_sample
                                               %var_source %var_arr_source %var_ssource %var_arr_ssource
+                                              %var_mssource
                                               %output
                         OpExecutionMode %fragment OriginUpperLeft
 
@@ -20,11 +22,14 @@
                         OpDecorate %var_ssource Binding 0
                         OpDecorate %var_arr_ssource DescriptorSet 0
                         OpDecorate %var_arr_ssource Binding 0
+                        OpDecorate %var_mssource DescriptorSet 0
+                        OpDecorate %var_mssource Binding 0
 
                         ;; Required decorations for interface variables
                         OpDecorate %input_coords Location 0
                         OpDecorate %input_index Location 1
                         OpDecorate %input_lod Location 2
+                        OpDecorate %input_sample Location 3
                         OpDecorate %output Location 0
 
                 %void = OpTypeVoid
@@ -53,6 +58,7 @@
         %input_coords = OpVariable %ptr_in_v2_int Input
          %input_index = OpVariable %ptr_in_int Input
            %input_lod = OpVariable %ptr_in_int Input
+        %input_sample = OpVariable %ptr_in_int Input
               %output = OpVariable %ptr_out_v4_f32 Output %v4_f32_zero
 
                         ;; A storage image.
@@ -75,20 +81,27 @@
    %ptr_simage_arr_2d = OpTypePointer UniformConstant %simage_arr_2d
      %var_arr_ssource = OpVariable %ptr_simage_arr_2d UniformConstant
 
+                        ;; A multisampled image.
+          %msimage_2d = OpTypeImage %f32 2D 0 0 1 1 Rgba32f
+      %ptr_msimage_2d = OpTypePointer UniformConstant %msimage_2d
+        %var_mssource = OpVariable %ptr_msimage_2d UniformConstant
+
        %fragment_type = OpTypeFunction %void
 
-          %fetch_type = OpTypeFunction %v4_f32 %v2_int %int %int
+          %fetch_type = OpTypeFunction %v4_f32 %v2_int %int %int %int
 
                %fetch = OpFunction %v4_f32 None %fetch_type
               %coords = OpFunctionParameter %v2_int
                %index = OpFunctionParameter %int
                  %lod = OpFunctionParameter %int
+              %sample = OpFunctionParameter %int
 
             %ob_label = OpLabel
               %source = OpLoad %image_2d %var_source
           %arr_source = OpLoad %image_arr_2d %var_arr_source
              %ssource = OpLoad %simage_2d %var_ssource
          %arr_ssource = OpLoad %simage_arr_2d %var_arr_ssource
+            %mssource = OpLoad %msimage_2d %var_mssource
 
 ;; No level of detail or array index.
              %bounds1 = OpImageQuerySize %v2_int %source
@@ -158,10 +171,30 @@
               %merge4 = OpLabel
               %texel4 = OpPhi %v4_f32 %real_texel4 %read4 %v4_f32_zero %check_coords4 %v4_f32_zero %merge3
 
+;; Multisampled.
+            %samples5 = OpImageQuerySamples %int %mssource
+       %samples_cond5 = OpULessThan %bool %sample %samples5
+                        OpSelectionMerge %merge5 None
+                        OpBranchConditional %samples_cond5 %check_coords5 %merge5
+
+       %check_coords5 = OpLabel
+             %bounds5 = OpImageQuerySize %v2_int %mssource
+       %coords_conds5 = OpULessThan %v2_bool %coords %bounds5
+        %coords_cond5 = OpAll %bool %coords_conds5
+                        OpBranchConditional %coords_cond5 %read5 %merge5
+
+               %read5 = OpLabel
+         %real_texel5 = OpImageFetch %v4_f32 %mssource %coords Sample %sample
+                        OpBranch %merge5
+
+              %merge5 = OpLabel
+              %texel5 = OpPhi %v4_f32 %v4_f32_zero %merge4 %v4_f32_zero %check_coords5 %real_texel5 %read5
+
              %result2 = OpFAdd %v4_f32 %texel1 %texel2
              %result3 = OpFAdd %v4_f32 %result2 %texel3
              %result4 = OpFAdd %v4_f32 %result3 %texel4
-                        OpReturnValue %result4
+             %result5 = OpFAdd %v4_f32 %result4 %texel5
+                        OpReturnValue %result5
                         OpFunctionEnd
 
                         ;; Entry point.
@@ -171,7 +204,8 @@
              %fcoords = OpLoad %v2_int %input_coords
               %findex = OpLoad %int %input_index
                 %flod = OpLoad %int %input_lod
-             %fresult = OpFunctionCall %v4_f32 %fetch %fcoords %findex %flod
+             %fsample = OpLoad %int %input_sample
+             %fresult = OpFunctionCall %v4_f32 %fetch %fcoords %findex %flod %fsample
                         OpStore %output %fresult
                         OpReturn
                         OpFunctionEnd
