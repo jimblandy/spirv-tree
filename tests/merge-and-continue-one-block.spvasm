@@ -1,4 +1,10 @@
 ;; A single block serves as a one-block loop's merge and another loop's continue.
+;;
+;; rejected by spirv-val:
+;;
+;;     error: line 18: Header block 16[%16] is contained in the loop construct headed by 9[%9],
+;;            but its merge block 12[%12] is not
+;;       %16 = OpLabel
 
                     OpCapability Shader
                     OpCapability Linkage
