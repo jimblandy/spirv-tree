@@ -1,10 +1,36 @@
-;; A single block serves as a one-block loop's merge and another loop's continue.
+;; A single block serves as an inner one-block loop's merge and the outer loop's continue.
+;;
+;;     fn polyhedron(n: i32) -> i32 {
+;;         let mut i = n;
+;;         let mut sum = 0;
+;;         loop { // outer loop
+;;             let j = i;
+;;             loop { // single-block loop
+;;                 sum += j;
+;;                 j -= 1;
+;;                 if j <= 0 {
+;;                     break;
+;;                 }
+;;             }
+;;             i -= 1; // inner loop's merge, outer loop's continue
+;;             if i <= 0 {
+;;                 break;
+;;             }
+;;         }
+;;     }
 ;;
 ;; rejected by spirv-val:
 ;;
 ;;     error: line 18: Header block 16[%16] is contained in the loop construct headed by 9[%9],
 ;;            but its merge block 12[%12] is not
 ;;       %16 = OpLabel
+;;
+;; A 'loop construct' and a 'continue construct' are separate things. The SPIR-V
+;; spec says, "if a construct contains another header block, it also contains
+;; that header’s corresponding merge block[...]" So this example runs afoul of
+;; these rules because the inner loop has its header block contained by the
+;; outer loop, but its merge block contained by the outer continue construct.
+;; They're not contained by the same construct.
 
                     OpCapability Shader
                     OpCapability Linkage

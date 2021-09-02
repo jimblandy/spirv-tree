@@ -1,0 +1,67 @@
+;; A loop's continue target is a single-block loop.
+;;
+;;     fn polyhedron(n: i32) -> i32 {
+;;         let mut i = n;
+;;         let mut sum = 0;
+;;         let mut next_i;
+;;         loop { // outer loop
+;;             next_i = i - 1;
+;;             if i <= 0 {
+;;                 break;
+;;             }
+;;             let j = i;
+;;             loop { // single-block loop, and merge of outer loop
+;;                 sum += j;
+;;                 j -= 1;
+;;                 if j <= 0 {
+;;                     break;
+;;                 }
+;;             }
+;;             i = next_i;
+;;         }
+;;     }
+;;
+;; rejected by spirv-val:
+;;
+;;     error: line 13: The loop construct with the loop header 16[%16]
+;;                     does not dominate the merge block 9[%9]
+;;
+;; A loop's header block must dominate its merge block, but %16's merge block is
+;; the outer loop's header, which it certainly does not dominate.
+
+                    OpCapability Shader
+                    OpCapability Linkage
+                    OpMemoryModel Logical GLSL450
+
+             %int = OpTypeInt 32 1
+            %bool = OpTypeBool
+ %polyhedron_type = OpTypeFunction %int %int
+         %const_0 = OpConstant %int 0
+         %const_1 = OpConstant %int 1
+
+      %polyhedron = OpFunction %int None %polyhedron_type
+               %n = OpFunctionParameter %int
+
+         %prelude = OpLabel
+                    OpBranch %9
+
+               %9 = OpLabel
+               %i = OpPhi %int %n %prelude %next_i %16
+            %sum1 = OpPhi %int %const_0 %prelude %next_sum2 %16
+          %next_i = OpISub %int %i %const_1
+           %cond1 = OpSLessThanEqual %bool %i %const_0
+                    OpLoopMerge %15 %16 None
+                    OpBranchConditional %cond1 %15 %16
+
+              %16 = OpLabel
+               %j = OpPhi %int %i %9 %next_j %16
+            %sum2 = OpPhi %int %sum1 %9 %next_sum2 %16
+       %next_sum2 = OpIAdd %int %sum2 %j
+          %next_j = OpISub %int %j %const_1
+           %cond2 = OpSLessThanEqual %bool %next_j %const_0
+                    OpLoopMerge %9 %16 None
+                    OpBranchConditional %cond2 %9 %16
+
+              %15 = OpLabel
+                    OpReturnValue %next_sum2
+                    OpFunctionEnd
